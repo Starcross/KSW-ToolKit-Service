@@ -11,11 +11,10 @@ class AutoThemeManager(val context: Context) {
     private val uiModeManager = context.getSystemService(UiModeManager::class.java)
     private val zLinkHandler = ZLinkHandler(context)
 
-    private var isAnyLightOn = false
     private var isNightTime = false
 
     private fun handleThemeChange() {
-        if (isAnyLightOn || isNightTime) {
+        if (isNightTime) {
             uiModeManager.nightMode = UiModeManager.MODE_NIGHT_YES
             if (ZLinkReceiver.CurrentDataSet.isShowing && ZLinkReceiver.CurrentDataSet.currentConnection != Connection.Disconnected) {
                 zLinkHandler.setDarkTheme()
@@ -28,11 +27,6 @@ class AutoThemeManager(val context: Context) {
         }
     }
 
-    fun handleThemeChangeByLightEvent(isAnyLightOn: Boolean) {
-        this.isAnyLightOn = isAnyLightOn
-        handleThemeChange()
-    }
-
     fun handleThemeChangeByTime(isNightTime: Boolean) {
         this.isNightTime = isNightTime
         handleThemeChange()
@@ -40,7 +34,7 @@ class AutoThemeManager(val context: Context) {
 
     fun zlinkHandler(data: ZLinkReceiver.ZLinkData) {
         if (data.isShowing && data.currentConnection != Connection.Disconnected) {
-            if (isAnyLightOn || isNightTime) {
+            if (isNightTime) {
                 Handler(context.mainLooper).postDelayed(
                     { zLinkHandler.setDarkTheme() },
                     1000

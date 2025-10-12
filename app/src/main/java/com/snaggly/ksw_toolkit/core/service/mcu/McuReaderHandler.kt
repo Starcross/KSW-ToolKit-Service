@@ -15,7 +15,6 @@ import com.snaggly.ksw_toolkit.core.service.mcu.action.screen_switch.NoOEMScreen
 import com.snaggly.ksw_toolkit.core.service.mcu.action.screen_switch.SoundRestorer
 import com.snaggly.ksw_toolkit.core.service.mcu.parser.McuEvent
 import com.snaggly.ksw_toolkit.core.service.mcu.parser.ScreenSwitchEvent
-import com.snaggly.ksw_toolkit.core.service.sys_observers.BrightnessObserver
 import com.snaggly.ksw_toolkit.core.service.view.BackTapper
 import com.snaggly.ksw_toolkit.receiver.ZLinkReceiver
 import com.snaggly.ksw_toolkit.util.brightnesstools.AdvancedBrightnessHandler
@@ -33,7 +32,6 @@ class McuReaderHandler(val context: Context, private val zLinkReceiver: ZLinkRec
 
     private val backTapper = BackTapper(context)
     private var mcuEventListeners = ArrayList<IMcuListener>()
-    private val brightnessObserver = BrightnessObserver(context)
     private val sendingInterceptor = McuSenderInterceptor(100)
     private var eventAction: EventAction? = null
     private var parseMcuEvent = McuEvent(context, backTapper)
@@ -144,13 +142,9 @@ class McuReaderHandler(val context: Context, private val zLinkReceiver: ZLinkRec
 
         //Is AutoTheme on? This service will be able to toggle global Android Dark/Light Theme
         if (config.systemOptions.autoTheme == true) {
-            parseMcuEvent.carDataEvent.lightEvent.autoThemeManager = {
-                autoThemeManager.handleThemeChangeByLightEvent(it)
-            }
             daytimeObserver.registerDaytimeListener {
                 autoThemeManager.handleThemeChangeByTime(it != DaytimeObserver.Daytime.Day)
             }
-            autoThemeManager.handleThemeChangeByLightEvent(McuLogic.isAnyLightOn)
             zLinkReceiver.setReceiverHandler(autoThemeManager::zlinkHandler)
         } else {
             parseMcuEvent.carDataEvent.lightEvent.autoThemeManager = null
@@ -235,10 +229,6 @@ class McuReaderHandler(val context: Context, private val zLinkReceiver: ZLinkRec
 
     fun unregisterMcuEventListener(listener: IMcuListener?) {
         mcuEventListeners.removeAll { it.asBinder() == listener?.asBinder() }
-    }
-
-    fun unregisterAllMcuEventListeners() {
-        mcuEventListeners.clear()
     }
 
     fun showStartMessage() {
